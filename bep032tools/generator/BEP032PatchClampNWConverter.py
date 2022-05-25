@@ -372,19 +372,20 @@ def read_metadata(metadata_file):
 
     participants_bids_metadata = {}
     participants_extra_metadata = {}
-    samples_metadata_list =d []
+    samples_metadata_list = []
 
     participants_bids_metadata.update({'date': str(md.columns[1])})
     participants_bids_metadata.update({'sex': np.array(md.loc[(md[md.columns[1]]=='Sexe')][md.columns[2]])[0]})
     participants_bids_metadata.update({'strain': np.array(md.loc[(md[md.columns[1]]=='Mice Line')][md.columns[2]])[0]})
     participants_extra_metadata.update({'weight': np.array(md.loc[(md[md.columns[1]]=='Weight')][md.columns[2]])[0]})
     participants_bids_metadata.update({'age': np.array(md.loc[(md[md.columns[1]]=='Age')][md.columns[2]])[0]})
-    participants_bids_metadata.update('participant_id': 'sub-{}'.format(participants_bids_metadata['date'][0:10]))
+    participants_bids_metadata.update({'participant_id': 'sub-{}'.format(participants_bids_metadata['date'][0:10])})
 
     samples_inds_list = md.loc[(md[md.columns[1]]=='Slice')].index
 
-    for ind, sample_ind in samples_inds_list:
-        # create sub data frame for the current sample
+    all_filenames_list = []
+    for ind, sample_ind in enumerate(samples_inds_list):
+        # create sub data frame for the current sample / cell
         start_ind = sample_ind
         if ind < len(samples_inds_list) - 1:
             end_ind = samples_inds_list[ind+1]
@@ -401,9 +402,55 @@ def read_metadata(metadata_file):
 
         c = np.array(sf)[:,3]
         t = c[np.where(c=='File')[0][0]+1:]
-        a = [type(t[i]) for i in range(len(t))]
-        # reste à identifier les string la dedans, puis identifier les dash dans ces strings, ça nous donnera les noms
-        # de fichier...
+        # find strings in there... they correspond to the file names containing the ephys data for this sample/cell
+        files_inds = np.where(np.array([type(t[i]) for i in range(len(t))])==str)[0]
+        # extract all the filenames (all this to deal with the - indicating that several files
+        filenames_list = []
+        for f_ind in files_inds:
+            file_string = t[f_ind]
+            dash_ind = file_string.find('-')
+            if dash_ind == -1:
+                filenames_list.append(file_string)
+            else:
+                # compute length of what's after the dash in this string... this will give us the length of what
+                # we should extract before the string!
+                substring_length = len(file_string) - dash_ind - 1
+                start_file_number = int(file_string[dash_ind-substring_length:dash_ind])
+                end_file_number = int(file_string[dash_ind+1:dash_ind+1+substring_length])
+                for nbr in range(start_file_number,end_file_number+1):
+                    if substring_length == 3:
+                        this_file_string = file_string[0:dash_ind-substring_length] + '{:03d}'.format(nbr)
+                    elif substring_length == 2:
+                        this_file_string = file_string[0:dash_ind-substring_length] + '{:02d}'.format(nbr)
+                    elif substring_length == 1:
+                        this_file_string = file_string[0:dash_ind-substring_length] + '{:1d}'.format(nbr)
+                    filenames_list.append(this_file_string)
+        all_filenames_list.extend(filenames_list)
+
+    re_value = np.array(sf.loc[(sf[sf.columns[1]]=='Re')][sf.columns[2]])[0]
+    re_unit = np.array(sf.loc[(sf[sf.columns[1]]=='Re')][sf.columns[3]])[0]
+    offset_value = np.array(sf.loc[(sf[sf.columns[1]]=='Offset')][sf.columns[2]])[0]
+    offset_unit = np.array(sf.loc[(sf[sf.columns[1]]=='Offset')][sf.columns[3]])[0]
+    rseal_value = np.array(sf.loc[(sf[sf.columns[1]]=='Rseal')][sf.columns[2]])[0]
+    rseal_unit = np.array(sf.loc[(sf[sf.columns[1]]=='Rseal')][sf.columns[3]])[0]
+    hc_value = np.array(sf.loc[(sf[sf.columns[1]]=='hc')][sf.columns[2]])[0]
+    hc_unit = np.array(sf.loc[(sf[sf.columns[1]]=='hc')][sf.columns[3]])[0]
+    pipcap_valueunit = np.array(sf.loc[(sf[sf.columns[1]]=='Pipette Capacitance')][sf.columns[3]])[0]
+
+    vr_value = np.array(sf.loc[(sf[sf.columns[4]]=='VR')][sf.columns[5]])[0]
+    vr_unit = np.array(sf.loc[(sf[sf.columns[4]]=='VR')][sf.columns[6]])[0]
+    rm_value = np.array(sf.loc[(sf[sf.columns[4]]=='Rm')][sf.columns[5]])[0]
+    rm_unit = np.array(sf.loc[(sf[sf.columns[4]]=='Rm')][sf.columns[6]])[0]
+    hc70_value = np.array(sf.loc[(sf[sf.columns[4]]=='hc at -70 mV')][sf.columns[5]])[0]
+    hc70_unit = np.array(sf.loc[(sf[sf.columns[4]]=='hc at -70 mV')][sf.columns[6]])[0]
+    rs_value = np.array(sf.loc[(sf[sf.columns[4]]=='Rs')][sf.columns[5]])[0]
+    rs_unit = np.array(sf.loc[(sf[sf.columns[4]]=='Rs')][sf.columns[6]])[0]
+    cm_value = np.array(sf.loc[(sf[sf.columns[4]]=='Cm')][sf.columns[5]])[0]
+    cm_unit = np.array(sf.loc[(sf[sf.columns[4]]=='Cm')][sf.columns[6]])[0]
+
+
+
+
 
     return metadata
 
