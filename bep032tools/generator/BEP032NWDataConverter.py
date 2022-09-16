@@ -10,6 +10,7 @@ import numpy as np
 
 #import bep032tools.validator.BEP032Validator
 from bep032tools.generator.BEP032Generator import BEP032Data
+from bep032tools.generator.utils import *
 
 
 try:
@@ -270,7 +271,13 @@ class BEP032PatchClampNWData(BEP032Data):
             raise ValueError(f'Invalid output data format "{output_format}"')
 
     def generate_metadata_file_participants(self, output):
-        pass
+        age = self.md['participants_md']['age']
+        participant_df = pd.DataFrame([
+            ['sub-' + self.sub_id, 'rattus norvegicus', age, 'M', '2001-01-01T00:00:00']],
+            columns=['participant_id', 'species', 'age', 'sex', 'birthday'])
+        participant_df.set_index('participant_id', inplace=True)
+        if not output.with_suffix('.tsv').exists():
+            save_tsv(participant_df, output)
 
     def generate_metadata_file_tasks(self, output):
         pass
@@ -557,9 +564,7 @@ def read_metadata(metadata_file):
     cm_value = np.array(sf.loc[(sf[sf.columns[4]]=='Cm')][sf.columns[5]])[0]
     cm_unit = np.array(sf.loc[(sf[sf.columns[4]]=='Cm')][sf.columns[6]])[0]
 
-
-
-
+    metadata.update({"participants_md":participants_bids_metadata})
 
     return metadata
 
@@ -621,6 +626,7 @@ def convert_patchclamp2bids(raw_data_dir, output_bids_dir):
 
         # read excel metadata file
         metadata_struct = read_metadata(metadata_file_list[current_ind])
+        session.md = metadata_struct
 
         # loop over ephys data files!
         for current_data_file in data_files:
