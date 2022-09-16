@@ -1,6 +1,6 @@
 # construct the set of rules to be applied, level by level
 RULES_SET = []
-DATA_EXTENSIONS = [".nix", ".nwb"]
+DATA_EXTENSIONS = [".nix", ".nwb", '.abf']
 METADATA_EXTENSIONS = [".tsv", ".json"]
 ANY_DATA_EXT = [f'({"|".join(DATA_EXTENSIONS)})']
 ANY_METADATA_EXT = [f'({"|".join(METADATA_EXTENSIONS)})']
