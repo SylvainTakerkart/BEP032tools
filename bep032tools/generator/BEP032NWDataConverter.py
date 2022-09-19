@@ -272,12 +272,18 @@ class BEP032PatchClampNWData(BEP032Data):
 
     def generate_metadata_file_participants(self, output):
         age = self.md['participants_md']['age']
+        date = self.md['participants_md']['date']
         participant_df = pd.DataFrame([
             ['sub-' + self.sub_id, 'rattus norvegicus', age, 'M', '2001-01-01T00:00:00']],
             columns=['participant_id', 'species', 'age', 'sex', 'birthday'])
         participant_df.set_index('participant_id', inplace=True)
         if not output.with_suffix('.tsv').exists():
-            save_tsv(participant_df, output)
+            # create participants.tsv file
+            participant_df.to_csv(output.with_suffix('.tsv'), mode='w', index=True, header=True, sep='\t')
+            #save_tsv(participant_df, output)
+        else:
+            # append new subject to existing participants.tsv file
+            participant_df.to_csv(output.with_suffix('.tsv'), mode='a', index=True, header=False, sep='\t')
 
     def generate_metadata_file_tasks(self, output):
         pass
@@ -566,6 +572,8 @@ def read_metadata(metadata_file):
 
     metadata.update({"participants_md":participants_bids_metadata})
 
+    print(metadata)
+
     return metadata
 
 def convert_patchclamp2bids(raw_data_dir, output_bids_dir):
@@ -601,7 +609,7 @@ def convert_patchclamp2bids(raw_data_dir, output_bids_dir):
         if len(xls_list) == 1:
             sub_ind += 1
             ses_ids_list.append(current_day)
-            sub_ids_list.append(str(sub_ind))
+            sub_ids_list.append(str(current_day))
             metadata_file_list.append(xls_list[0])
             print('The following recording date has been selected: ' + current_day)
         elif len(xls_list) == 0:
