@@ -250,6 +250,9 @@ class BEP032Data:
     def generate_metadata_file_dataset_description(self, output):
         raise NotImplementedError()
 
+    def generate_metadata_file_samples(self, output):
+        raise NotImplementedError()
+
     def generate_metadata_file_sessions(self, output):
         raise NotImplementedError()
 
@@ -275,7 +278,11 @@ class BEP032Data:
                                                         / "dataset_description")
         self.generate_metadata_file_participants(self.basedir / f"participants")
 
+        if self.ephys_type == 'ice':
+            self.generate_metadata_file_samples(self.basedir / f"samples")
+
         self.generate_metadata_file_tasks(self.basedir / f"tasks")
+
         if self.ephys_type == 'ece':
             self.generate_metadata_file_sessions(self.get_data_folder().parents[1] /
                                              f'sub-{self.sub_id}_sessions')

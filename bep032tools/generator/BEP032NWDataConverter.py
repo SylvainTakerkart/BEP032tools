@@ -168,7 +168,7 @@ class BEP032PatchClampNWData(BEP032Data):
 
         return path
 
-    def generate_structure(self):
+    def generate_directory_structure(self):
         """
         Generate the required folders for storing the dataset
 
@@ -285,11 +285,43 @@ class BEP032PatchClampNWData(BEP032Data):
             # append new subject to existing participants.tsv file
             participant_df.to_csv(output.with_suffix('.tsv'), mode='a', index=True, header=False, sep='\t')
 
+    def generate_metadata_file_samples(self, output):
+        n_samples = len(self.md['samples_md'])
+        samples_df = pd.DataFrame(columns=['sample_id', 'sample_type', 'participant_id'])
+        for sample_ind in range(n_samples):
+            sample_id = self.md['samples_md'][sample_ind]['sample_id']
+            sample_type = self.md['samples_md'][sample_ind]['sample_type']
+            participant_id = self.md['samples_md'][sample_ind]['participant_id']
+            current_sample_df = pd.DataFrame([[sample_id, sample_type, participant_id]],
+                                             columns=['sample_id', 'sample_type', 'participant_id'])
+            samples_df = pd.concat([samples_df,current_sample_df])
+        samples_df.set_index('sample_id', inplace=True)
+        if not output.with_suffix('.tsv').exists():
+            # create samples.tsv file
+            samples_df.to_csv(output.with_suffix('.tsv'), mode='w', index=True, header=True, sep='\t')
+            #save_tsv(participant_df, output)
+        else:
+            # append data from new subject to existing samples.tsv file
+            samples_df.to_csv(output.with_suffix('.tsv'), mode='a', index=True, header=False, sep='\t')
+
+
     def generate_metadata_file_tasks(self, output):
         pass
 
     def generate_metadata_file_dataset_description(self, output):
-        pass
+        task_dict = {
+            "Name": "Electrophysiology",
+            "BIDSVersion": "1.6.0",
+            "License": "CC BY 4.0",
+            "Authors": ["NW"],
+            "Acknowledgements": "We thank the Rudolf the reindeer, the christmas gnomes and "
+                                "Miss Moneypenny.",
+            "HowToAcknowledge": "Bond J, Claus S (2000) How to deliver 1 Million parcel in one "
+                                "night. https://doi.org/007/007 ",
+            "Funding": ["ANR blahblah"],
+            "ReferencesAndLinks": "https://doi.org/007/007",
+        }
+        save_json(task_dict, output)
 
     def generate_metadata_file_probes(self, output):
         pass
@@ -321,47 +353,6 @@ class BEP032PatchClampNWData(BEP032Data):
             True if validation was successful. False if it failed.
         """
         bep032tools.validator.BEP032Validator.is_valid(self.basedir)
-
-    @classmethod
-    def generate_struct(cls, csv_file, pathToDir):
-        """
-        Create structure with csv file given in argument
-        This file must contain a header row specifying the provided data. Accepted titles are
-        defined in the BEP.
-        Essential information of the following attributes needs to be present.
-        Essential columns are 'sub_id' and 'ses_id'.
-        Optional columns are 'runs', 'tasks' and 'data_file' (only single file per sub_id, ses_id
-        combination supported). 'data_file' needs to be a valid path to a nix or nwb file.
-
-        Parameters
-        ----------
-        csv_file: str
-            Csv file that contains sub_id and ses_id and optional columns
-        pathToDir: str
-            Path to directory where the directories will be created.
-        """
-
-        df = extract_structure_from_csv(csv_file)
-        df = df[ESSENTIAL_CSV_COLUMNS]
-
-        organize_data = 'data_file' in df
-
-        if not os.path.isdir(pathToDir):
-            os.makedirs(pathToDir)
-
-        for session_kwargs in df.to_dict('index').values():
-            if organize_data:
-                data_file = session_kwargs.pop('data_file')
-            session = cls(**session_kwargs)
-            session.basedir = pathToDir
-            session.generate_structure()
-            if organize_data:
-                session.register_data_files([data_file])
-                session.organize_data_files(mode='copy')
-            try:
-                session.generate_all_metadata_files()
-            except NotImplementedError:
-                pass
 
 
 def convert_data(source_file, output_format):
@@ -468,7 +459,7 @@ def extract_structure_from_csv(csv_file):
     return df
 
 
-def read_metadata(metadata_file):
+def read_NW_metadata(metadata_file):
     """
     Read the excel metadata file as formatted by NW
 
@@ -492,16 +483,15 @@ def read_metadata(metadata_file):
 
     metadata = {}
 
-    participants_bids_metadata = {}
-    participants_extra_metadata = {}
+    participants_metadata = {}
     samples_metadata_list = []
 
-    participants_bids_metadata.update({'date': str(md.columns[1])})
-    participants_bids_metadata.update({'sex': np.array(md.loc[(md[md.columns[1]]=='Sexe')][md.columns[2]])[0]})
-    participants_bids_metadata.update({'strain': np.array(md.loc[(md[md.columns[1]]=='Mice Line')][md.columns[2]])[0]})
-    participants_extra_metadata.update({'weight': np.array(md.loc[(md[md.columns[1]]=='Weight')][md.columns[2]])[0]})
-    participants_bids_metadata.update({'age': np.array(md.loc[(md[md.columns[1]]=='Age')][md.columns[2]])[0]})
-    participants_bids_metadata.update({'participant_id': 'sub-{}'.format(participants_bids_metadata['date'][0:10])})
+    participants_metadata.update({'date': str(md.columns[1])})
+    participants_metadata.update({'sex': np.array(md.loc[(md[md.columns[1]]=='Sexe')][md.columns[2]])[0]})
+    participants_metadata.update({'strain': np.array(md.loc[(md[md.columns[1]]=='Mice Line')][md.columns[2]])[0]})
+    participants_metadata.update({'weight': np.array(md.loc[(md[md.columns[1]]=='Weight')][md.columns[2]])[0]})
+    participants_metadata.update({'age': np.array(md.loc[(md[md.columns[1]]=='Age')][md.columns[2]])[0]})
+    participants_metadata.update({'participant_id': 'sub-{}'.format(participants_metadata['date'][0:10])})
 
     samples_inds_list = md.loc[(md[md.columns[1]]=='Slice')].index
 
@@ -517,10 +507,49 @@ def read_metadata(metadata_file):
         slice_nbr = np.array(sf.loc[(sf[sf.columns[1]]=='Slice')][sf.columns[2]])[0]
         cell_nbr = np.array(sf.loc[(sf[sf.columns[1]]=='Cell')][sf.columns[2]])[0]
         sample_id = "slice{:02d}cell{:02d}".format(slice_nbr, cell_nbr)
-        sample_metadata = {}
-        sample_metadata.update({'sample_id': 'sample-{}'.format(sample_id)})
-        sample_metadata.update({'sample_type': 'in vitro differentiated cells'})
-        sample_metadata.update({'participant_id': participants_bids_metadata['participant_id'] })
+        current_sample_metadata = {}
+        current_sample_metadata.update({'sample_id': 'sample-{}'.format(sample_id)})
+        current_sample_metadata.update({'sample_type': 'in vitro differentiated cells'})
+        current_sample_metadata.update({'participant_id': participants_metadata['participant_id'] })
+
+        re_value = np.array(sf.loc[(sf[sf.columns[1]] == 'Re')][sf.columns[2]])[0]
+        current_sample_metadata.update({'re_value': re_value})
+        re_unit = np.array(sf.loc[(sf[sf.columns[1]] == 'Re')][sf.columns[3]])[0]
+        current_sample_metadata.update({'re_unit': re_unit})
+        # offset_value = np.array(sf.loc[(sf[sf.columns[1]] == 'Offset')][sf.columns[2]])[0]
+        # current_sample_metadata.update({})
+        # offset_unit = np.array(sf.loc[(sf[sf.columns[1]] == 'Offset')][sf.columns[3]])[0]
+        # current_sample_metadata.update({})
+        # rseal_value = np.array(sf.loc[(sf[sf.columns[1]] == 'Rseal')][sf.columns[2]])[0]
+        # current_sample_metadata.update({})
+        # rseal_unit = np.array(sf.loc[(sf[sf.columns[1]] == 'Rseal')][sf.columns[3]])[0]
+        # current_sample_metadata.update({})
+        # hc_value = np.array(sf.loc[(sf[sf.columns[1]] == 'hc')][sf.columns[2]])[0]
+        # current_sample_metadata.update({})
+        # hc_unit = np.array(sf.loc[(sf[sf.columns[1]] == 'hc')][sf.columns[3]])[0]
+        # current_sample_metadata.update({})
+        # pipcap_valueunit = np.array(sf.loc[(sf[sf.columns[1]] == 'Pipette Capacitance')][sf.columns[3]])[0]
+        # current_sample_metadata.update({})
+        # vr_value = np.array(sf.loc[(sf[sf.columns[4]] == 'VR')][sf.columns[5]])[0]
+        # current_sample_metadata.update({})
+        # vr_unit = np.array(sf.loc[(sf[sf.columns[4]] == 'VR')][sf.columns[6]])[0]
+        # current_sample_metadata.update({})
+        # rm_value = np.array(sf.loc[(sf[sf.columns[4]] == 'Rm')][sf.columns[5]])[0]
+        # current_sample_metadata.update({})
+        # rm_unit = np.array(sf.loc[(sf[sf.columns[4]] == 'Rm')][sf.columns[6]])[0]
+        # current_sample_metadata.update({})
+        # hc70_value = np.array(sf.loc[(sf[sf.columns[4]] == 'hc at -70 mV')][sf.columns[5]])[0]
+        # current_sample_metadata.update({})
+        # hc70_unit = np.array(sf.loc[(sf[sf.columns[4]] == 'hc at -70 mV')][sf.columns[6]])[0]
+        # current_sample_metadata.update({})
+        # rs_value = np.array(sf.loc[(sf[sf.columns[4]] == 'Rs')][sf.columns[5]])
+        # current_sample_metadata.update({})
+        # rs_unit = np.array(sf.loc[(sf[sf.columns[4]] == 'Rs')][sf.columns[6]])
+        # current_sample_metadata.update({})
+        # cm_value = np.array(sf.loc[(sf[sf.columns[4]] == 'Cm')][sf.columns[5]])[0]
+        # current_sample_metadata.update({})
+        # cm_unit = np.array(sf.loc[(sf[sf.columns[4]] == 'Cm')][sf.columns[6]])[0]
+        # current_sample_metadata.update({})
 
         c = np.array(sf)[:,3]
         t = c[np.where(c=='File')[0][0]+1:]
@@ -547,30 +576,13 @@ def read_metadata(metadata_file):
                     elif substring_length == 1:
                         this_file_string = file_string[0:dash_ind-substring_length] + '{:1d}'.format(nbr)
                     filenames_list.append(this_file_string)
+        current_sample_metadata.update({'data_files': filenames_list})
         all_filenames_list.extend(filenames_list)
+        samples_metadata_list.append(current_sample_metadata)
 
-    re_value = np.array(sf.loc[(sf[sf.columns[1]]=='Re')][sf.columns[2]])[0]
-    re_unit = np.array(sf.loc[(sf[sf.columns[1]]=='Re')][sf.columns[3]])[0]
-    offset_value = np.array(sf.loc[(sf[sf.columns[1]]=='Offset')][sf.columns[2]])[0]
-    offset_unit = np.array(sf.loc[(sf[sf.columns[1]]=='Offset')][sf.columns[3]])[0]
-    rseal_value = np.array(sf.loc[(sf[sf.columns[1]]=='Rseal')][sf.columns[2]])[0]
-    rseal_unit = np.array(sf.loc[(sf[sf.columns[1]]=='Rseal')][sf.columns[3]])[0]
-    hc_value = np.array(sf.loc[(sf[sf.columns[1]]=='hc')][sf.columns[2]])[0]
-    hc_unit = np.array(sf.loc[(sf[sf.columns[1]]=='hc')][sf.columns[3]])[0]
-    pipcap_valueunit = np.array(sf.loc[(sf[sf.columns[1]]=='Pipette Capacitance')][sf.columns[3]])[0]
 
-    vr_value = np.array(sf.loc[(sf[sf.columns[4]]=='VR')][sf.columns[5]])[0]
-    vr_unit = np.array(sf.loc[(sf[sf.columns[4]]=='VR')][sf.columns[6]])[0]
-    rm_value = np.array(sf.loc[(sf[sf.columns[4]]=='Rm')][sf.columns[5]])[0]
-    rm_unit = np.array(sf.loc[(sf[sf.columns[4]]=='Rm')][sf.columns[6]])[0]
-    hc70_value = np.array(sf.loc[(sf[sf.columns[4]]=='hc at -70 mV')][sf.columns[5]])[0]
-    hc70_unit = np.array(sf.loc[(sf[sf.columns[4]]=='hc at -70 mV')][sf.columns[6]])[0]
-    rs_value = np.array(sf.loc[(sf[sf.columns[4]]=='Rs')][sf.columns[5]])
-    rs_unit = np.array(sf.loc[(sf[sf.columns[4]]=='Rs')][sf.columns[6]])
-    cm_value = np.array(sf.loc[(sf[sf.columns[4]]=='Cm')][sf.columns[5]])[0]
-    cm_unit = np.array(sf.loc[(sf[sf.columns[4]]=='Cm')][sf.columns[6]])[0]
-
-    metadata.update({"participants_md":participants_bids_metadata})
+    metadata.update({"participants_md":participants_metadata})
+    metadata.update({"samples_md":samples_metadata_list})
 
     print(metadata)
 
@@ -625,7 +637,7 @@ def convert_patchclamp2bids(raw_data_dir, output_bids_dir):
         session = BEP032PatchClampNWData(sub_id, ses_id)
         session.basedir = output_bids_dir
         # generate the BIDS directory structure
-        session.generate_structure()
+        session.generate_directory_structure()
 
         # identify the input ephys data files for this session, as the abf files available in the data directory
         data_path_filter = os.path.join(raw_data_dir,current_day,'*.abf')
@@ -633,7 +645,7 @@ def convert_patchclamp2bids(raw_data_dir, output_bids_dir):
         print(len(data_files))
 
         # read excel metadata file
-        metadata_struct = read_metadata(metadata_file_list[current_ind])
+        metadata_struct = read_NW_metadata(metadata_file_list[current_ind])
         session.md = metadata_struct
 
         # loop over ephys data files!
