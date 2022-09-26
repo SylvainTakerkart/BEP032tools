@@ -324,7 +324,15 @@ class BEP032PatchClampNWData(BEP032Data):
         save_json(task_dict, output)
 
     def generate_metadata_file_probes(self, output):
-        pass
+        probes_df = pd.DataFrame([
+            ['e380a', 'multi-shank', 0, 'iridium-oxide', 0, 0, 0, 'circle', 20],
+            ['e380b', 'multi-shank', 1.5, 'iridium-oxide', 0, 100, 0, 'circle', 20],
+            ['t420a', 'tetrode', 3.6, 'iridium-oxide', 0, 200, 0, 'circle', 20],
+            ['t420b', 'tetrode', 7, 'iridium-oxide', 500, 0, 0, 'circle', 20]],
+            columns=['probe_id', 'type', 'coordinate_space', 'material', 'x', 'y', 'z', 'shape',
+                     'contact_size'])
+        probes_df.set_index('probe_id', inplace=True)
+        save_tsv(probes_df, output)
 
     def generate_metadata_file_channels(self, output):
         pass
@@ -528,8 +536,8 @@ def read_NW_metadata(metadata_file):
         # current_sample_metadata.update({})
         # hc_unit = np.array(sf.loc[(sf[sf.columns[1]] == 'hc')][sf.columns[3]])[0]
         # current_sample_metadata.update({})
-        # pipcap_valueunit = np.array(sf.loc[(sf[sf.columns[1]] == 'Pipette Capacitance')][sf.columns[3]])[0]
-        # current_sample_metadata.update({})
+        pipcap_valueunit = np.array(sf.loc[(sf[sf.columns[1]] == 'Pipette Capacitance')][sf.columns[3]])[0]
+        current_sample_metadata.update({'pipette_capacitance': pipcap_valueunit})
         # vr_value = np.array(sf.loc[(sf[sf.columns[4]] == 'VR')][sf.columns[5]])[0]
         # current_sample_metadata.update({})
         # vr_unit = np.array(sf.loc[(sf[sf.columns[4]] == 'VR')][sf.columns[6]])[0]
