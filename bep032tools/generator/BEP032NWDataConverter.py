@@ -70,8 +70,8 @@ class BEP032PatchClampNWData(BEP032Data):
 
     """
 
-    def __init__(self, sub_id, ses_id):
-        super().__init__(sub_id, ses_id, modality='ephys', ephys_type='ice')
+    def __init__(self, sub_id):
+        super().__init__(sub_id, ses_id=None, modality='ephys')
 
     def register_data_files(self, *files, task=None, run=None, autoconvert=None):
         """
@@ -134,64 +134,6 @@ class BEP032PatchClampNWData(BEP032Data):
         if not Path(basedir).exists():
             raise ValueError('Base directory does not exist')
         self._basedir = Path(basedir)
-
-    def get_data_folder(self, mode='absolute'):
-        """
-        Generates the path to the folder of the data files
-
-        Parameters
-        ----------
-        mode : str
-            Returns an absolute or relative path
-            Valid values: 'absolute', 'local'
-
-        Returns
-        ----------
-        pathlib.Path
-            Path of the data folder
-        """
-
-        if self.ephys_type == 'ece':
-            # for extra-cellular ephys, a session-level directory is used in the BIDS hierarchy
-            path = Path(f'sub-{self.sub_id}', f'ses-{self.ses_id}', self.modality)
-        elif self.ephys_type == 'ice':
-            # for intra-cellular ephys, there is no session-level directory in the BIDS hierarchy
-            path = Path(f'sub-{self.sub_id}', self.modality)
-        else:
-            raise ValueError('The ephys_type option should take the value ece or ice to designate extra- or intra-'
-                             'cellular electrophysiology')
-
-        if mode == 'absolute':
-            if self.basedir is None:
-                raise ValueError('No base directory set.')
-            path = self.basedir / path
-
-        return path
-
-    def generate_directory_structure(self):
-        """
-        Generate the required folders for storing the dataset
-
-        Returns
-        ----------
-        path
-            Path of created data folder
-        """
-
-        if self.basedir is None:
-            raise ValueError('No base directory set.')
-
-        data_folder = Path(self.basedir).joinpath(self.get_data_folder())
-        data_folder.mkdir(parents=True, exist_ok=True)
-
-        if self.ephys_type == 'ece':
-            self.filename_stem = f'sub-{self.sub_id}_ses-{self.ses_id}'
-        elif self.ephys_type == 'ice':
-            self.filename_stem = f'sub-{self.sub_id}'
-        else:
-            raise ValueError('The ephys type should be take the value ece or ice')
-
-        return data_folder
 
     def organize_data_files(self, mode='link', output_format='nwb'):
         """
@@ -306,6 +248,9 @@ class BEP032PatchClampNWData(BEP032Data):
 
 
     def generate_metadata_file_tasks(self, output):
+        pass
+
+    def generate_metadata_file_sessions(self, output):
         pass
 
     def generate_metadata_file_dataset_description(self, output):
@@ -642,10 +587,10 @@ def convert_patchclamp2bids(raw_data_dir, output_bids_dir):
 
     for current_ind in range(len(ses_ids_list)):
         sub_id, ses_id = sub_ids_list[current_ind], ses_ids_list[current_ind]
-        session = BEP032PatchClampNWData(sub_id, ses_id)
+        session = BEP032PatchClampNWData(sub_id)
         session.basedir = output_bids_dir
         # generate the BIDS directory structure
-        session.generate_directory_structure()
+        session.generate_structure()
 
         # identify the input ephys data files for this session, as the abf files available in the data directory
         data_path_filter = os.path.join(raw_data_dir,current_day,'*.abf')
