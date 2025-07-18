@@ -1,0 +1,61 @@
+PROJECT_NAME: microscopy_confocal
+
+modality: microscopy
+
+fields:
+  datafilepaths_list:
+    description: List of fields containing the paths to the .ome.tif data files(where the raw data is stored)
+    required: true
+    raw_data_path_pattern: "{chunk_key}_datafile_path"
+    example:
+      - image01_datafile_path
+      - image02_datafile_path
+      - image03_datafile_path
+
+  segment_list:  # a segment is a chunk (therefore a segment_list is a list of chunks)
+    description: List of chunk prefixes to process
+    value:
+      - image01
+      - image02
+      - image03
+
+  participant_id:
+    description: Participant identifier (e.g., sub-01)
+    type: string
+    required: true
+
+  sample_id:
+    description: Sample identifier (e.g., sample-01)
+    type: string
+    required: true
+
+  chunk_id:
+    description: Chunk identifier (e.g., chunk-01)
+    type: string
+    required: true
+
+  microscope_type:
+    description: Type of microscope used (e.g., CONF for confocal)
+    type: string
+    required: true
+    default: CONF
+
+  output_filename_format:
+    description: Format of the output file name
+    type: string
+    default: "sub-{participant_id}_sample-{sample_id}_chunk-{chunk_id}_{microscope_type}_ome.tif"
+
+
+  output_json_format:
+    description: Format of the associated JSON file
+    type: string
+    default: "{participant_id}_{sample_id}_{chunk_id}_{microscope_type}.json"
+
+  session_id:
+    description: Session identifier (e.g., ses-01)
+    type: string
+    required: false
+  custom_pattern:
+    description: Custom fields for chunked confocal images
+    pattern: "{chunk_key}_{field}"
+    required: false

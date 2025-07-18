@@ -1,17 +1,12 @@
 """
-GenerateFullBIDSDataset.py
+confocal_microscopy_customs.py
 
 This module provides tools for processing, organizing, and converting neuroimaging datasets into the BIDS (Brain Imaging Data Structure) format.
 It supports directory creation, file conversion, metadata handling, and integration with elab sources and the BIDSTools ecosystem.
 
-Main Features:
-- Generates BIDS-compliant directory and file structures for experiments.
-- Converts raw data formats (e.g., EDF) to BIDS-compatible formats.
-- Handles metadata extraction, transformation, and storage in TSV/JSON.
-- Integrates with elab_bridge for metadata download and experiment management.
 
 Typical Usage:
-    python GenerateFullBIDSDataset.py --config_file_path <config.json> --metada_file_path <metadata.csv> --output_dir <bids_output> --tag <experiment_tag>
+    pytho nconfocal_microscopy_customs --config_file_path <config.json> --metada_file_path <metadata.csv> --output_dir <bids_output> --tag <experiment_tag>, --project_config_yml_path <project_config.yml>
 
 Refer to the BIDS specification and BIDSTools documentation for further details.
 """
@@ -28,7 +23,7 @@ import numpy as np
 import yaml
 import ast
 from BIDSTools.Createfile import CreatFile
-
+from BIDSTools.ProjectConfig import ProjectConfig
 
 from BIDSTools.constants_fields import *  # Import des constantes de mapping de champs
 
@@ -38,7 +33,8 @@ import elab_bridge
 from elab_bridge import server_interface
 
 from BIDSTools.convertfileformat import ConvertedfSData
-
+from BIDSTools.BIDS_PROJECT_CONFIG.MicroscopyConfocalCustom import MicroscopyConfocalCustom
+from BIDSTools.BIDS_PROJECT_CONFIG.Eyetracking import EyetrackingCustom
 
 def generate_top_level_file(outpout_dir):
     """
@@ -263,7 +259,7 @@ def writeheader(template_content, file_name, output_dir):
         f.write(header)
 
 
-def construct_bids_folders(output_dir, experiment):
+def construct_bids_folders(output_dir, experiment, project_config):
     """
     Creates all necessary directories for each experiment (each row in the metadata file).
 
@@ -306,8 +302,8 @@ def construct_bids_folders(output_dir, experiment):
     #data_type = experiment.get_attribute("Data type") # must be changed
 
     # check modality
-    modality_list = experiment.get_attribute(MODALITY)
-    modality_list  = ast.literal_eval(modality_list)
+    modality_list = project_config.get_project_modalities()
+
 
 
     # take the list of modalities
@@ -315,39 +311,42 @@ def construct_bids_folders(output_dir, experiment):
     for modality in modality_list:
         if modality.upper() not in modality_objects.modalities:
             raise ValueError(f"Modality {modality} is not valid. Valid modalities are: {modality_objects.modalities}")
-            #
+
+
+
         for datatype_key  in modality_objects.modalities:
             if modality.upper() in datatype_key:
                 data_type = modality_objects.modality_details[datatype_key]
-
-                # create seesion directory
-                if check_datatype_has_session(data_type):
+                if project_config.is_session_required():
                     session_number = experiment.get_attribute(SESSION_ID)
-                    if session_number is None:
-                        logger = logging.getLogger(__name__)
-                        logger.error(f"Session number is not set for experiment: {experiment}")
-                        #raise ValueError("Session number is not set for experiment") # on check si on doit lever lexecption a chaque que l'utlisateurs ne respdecte pas quelques chose
+
 
                     current_dir = generate_session_dir(current_dir,
                                                        session_number)
                 current_dir = generate_datatype_dir(current_dir, data_type)
 
-    metadata_link = str(experiment.get_attribute(DATA_PATH))
 
-    print(metadata_link, type(metadata_link))
 
-    if metadata_link is None or not os.path.isfile(metadata_link):
-        # use default link
-        logging.error(f"Metadata link does not exist: {metadata_link} the default link will be used")
-        metadata_link="/home/INT/idrissou.f/Bureau/sina-raw-data/sub-02_ses-01_task-DeepMReyeCalibTraining_run-01_eyetrack.edf" # to be remove in the future
-    file_name = os.path.basename(metadata_link)
-    destination_path = os.path.join(current_dir, file_name)
 
-    # Copiez le fichier
-    shutil.copy(metadata_link, destination_path)
+
+
+    # creat a custom part
+    if project_config.get_project_name()=='microscopy_confocal':
+        custom_part= MicroscopyConfocalCustom(project_config, experiment, current_dir)
+        custom_part.write_chunk_info()
+
+    elif project_config.get_project_name()=='eyetracking':
+
+        custom_part= EyetrackingCustom(project_config, experiment, current_dir)
+        custom_part.write_run_info()
+
+    else:
+        raise ValueError("Unknown project name , perhaps this project is not supported yet : " + project_config.get_project_name())
+
+
     # Append the processed experiment to the list
     list_experiments_already_processed.append(experiment)
-    return current_dir, list_experiments_already_processed, metadata_link
+    return current_dir, list_experiments_already_processed
 
 
 def add_new_experiment_to_tsv(file_path, experiment):
@@ -649,9 +648,15 @@ def edf_converter(row, raw_data, output_dir):
     edf_converter.convert_bids_data()
     yml_file.close()
     os.remove(yml_file_name)
+def confacal_microscopy_data_processing(project_config, current_dir="sub-1/ses-1/micr/"):
+    data_file_format =project_config.get_data_file_format()
 
 
-def main(config_file_path, metada_file_path, output_dir, tag):
+
+
+
+
+def main(config_file_path, metada_file_path, output_dir, tag, project_config_yml_path="confocal_microscopy.yml"):
 
 
     """
@@ -670,6 +675,9 @@ def main(config_file_path, metada_file_path, output_dir, tag):
         Path to the directory where the BIDS dataset will be generated.
     tag : str
         Tag to filter experiments.
+    project_config_yml_path : str
+        Path to the project configuration file.
+        eg: confocal_microscopy.yml
 
     Returns
     -------
@@ -683,9 +691,15 @@ def main(config_file_path, metada_file_path, output_dir, tag):
         tag,
         metada_file_path
     )
+    # get project config
+    project_config = ProjectConfig(project_config_yml_path)
+
    # Generate top-level file structure
     generate_top_level_file(output_dir)
 
+
+
+    # Generate participant folder structure
 
 
     # Write headers to TSV files
@@ -702,9 +716,9 @@ def main(config_file_path, metada_file_path, output_dir, tag):
             experiment = Experiment(**row)
             # creat a BIDS folder structure
 
-            output_edf, t, raw_data = construct_bids_folders(output_dir, experiment)
+            construct_bids_folders(output_dir, experiment, project_config)
             # convert edf to bids( formats) and store them in predefined folders
-            edf_converter(row, raw_data, output_edf)
+
             # fill metadata in TSV files
             fill_metadata_files(output_dir, experiment)
 
@@ -715,5 +729,6 @@ if __name__ == '__main__':
     parser.add_argument("metada_file_path", help="The path to the output directory")
     parser.add_argument("output_dir", help="The path to the output directory")
     parser.add_argument("tag", help="The tag to write the output to")
+    parser.add_argument("project_config_yml_path", help="The path to the project configuration file")
     args = parser.parse_args()
-    main(args.config_file_path, args.metada_file_path, args.output_dir, args.tag)
+    main(args.config_file_path, args.metada_file_path, args.output_dir, args.tag, args.project_config_yml_path)

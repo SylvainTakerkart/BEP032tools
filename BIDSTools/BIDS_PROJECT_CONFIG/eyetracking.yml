@@ -1,0 +1,47 @@
+
+project_name: eyetracking_bids
+modality: eyetracking
+data_types: beh
+fields:
+  datafilepaths_list:
+    description: List of fields containing paths to raw eye-tracking files (e.g., .edf, .asc)
+    required: true
+    raw_data_path_pattern: "{run_key}_datafile_path"
+    example:
+      - run01_datafile_path
+      - run02_datafile_path
+      - run03_datafile_path
+
+  segment_list: # a segment is a run for eye-tracking
+    description: List of eye-tracking runs or sessions to process
+    required: true
+    value:
+      - run01
+      - run02
+      - run03
+
+  custom_pattern:
+    description: Pattern to dynamically generate run-specific field names
+    pattern: "{run_key}_{field}"
+    required: false
+
+  output_filename_format:
+    description: Format of the main output file name (e.g., converted EDF file)
+    type: string
+    default: "sub-{participant_id}_ses-{session_id}_task-{task}_run-{run_id}_eyetrack.edf"
+
+  output_json_format:
+    description: Format of the associated JSON file name
+    type: string
+    default: "sub-{participant_id}_ses-{session_id}_task-{task}_run-{run_id}_eyetrack.json"
+  session_id:
+    description: Session identifier (e.g., ses-01)
+    type: string
+    required: True
+
+
+required:
+  - participant_id
+  - session_id
+  - task
+  - run_id

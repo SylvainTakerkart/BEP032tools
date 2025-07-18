@@ -137,6 +137,10 @@ def load_yaml_file(yaml_file):
     Returns:
         dict: Dictionary containing the YAML file contents.
     """
+    if not os.path.exists(yaml_file):
+        raise FileNotFoundError(f"YAML file not found: {yaml_file}")
     with open(yaml_file, 'r') as file:
         data = yaml.safe_load(file)
+    if data is None:
+        raise ValueError(f"Failed to load YAML file: {yaml_file}")
     return data
