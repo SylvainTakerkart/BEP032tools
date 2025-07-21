@@ -1,7 +1,9 @@
 
-project_name: eyetracking_bids
-modality: eyetracking
+PROJECT_NAME: eyetracking
+modality: 'BEHAVIORAL EXPERIMENTS' # e.g., eyetracking
 data_types: beh
+segment : run
+segment_id : run_id
 fields:
   datafilepaths_list:
     description: List of fields containing paths to raw eye-tracking files (e.g., .edf, .asc)
@@ -17,8 +19,8 @@ fields:
     required: true
     value:
       - run01
-      - run02
-      - run03
+      #- run02
+      #- run03
 
   custom_pattern:
     description: Pattern to dynamically generate run-specific field names

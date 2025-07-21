@@ -1,12 +1,15 @@
 PROJECT_NAME: microscopy_confocal
 
 modality: microscopy
+data_types: micr
+segment: chunk
 
+segment_id: chunk_id
 fields:
   datafilepaths_list:
     description: List of fields containing the paths to the .ome.tif data files(where the raw data is stored)
     required: true
-    raw_data_path_pattern: "{chunk_key}_datafile_path"
+    raw_data_path_pattern: "{chunk_key}_datafile_path"    # pattern used on elab   # pattern used on elab :
     example:
       - image01_datafile_path
       - image02_datafile_path
@@ -17,7 +20,7 @@ fields:
     value:
       - image01
       - image02
-      - image03
+     # - image03
 
   participant_id:
     description: Participant identifier (e.g., sub-01)

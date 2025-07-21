@@ -25,7 +25,6 @@ from pandas import read_csv
 import elab_bridge
 import json
 from elab_bridge import server_interface
-from BIDSTools.BidsEmptyRepositoryGenerator import Generator
 from BIDSTools.WriteModalityAgnosticBIDSMetadataFiles import *
 import argparse
 
@@ -33,11 +32,11 @@ import argparse
 def main(config_file_path, output_dir_path):
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    csv_file = os.path.join(output_dir_path, '../elab_data.csv')
+    csv_file = os.path.join(output_dir_path, 'elab_data.csv')
 
     jsonformat = elab_bridge.server_interface.extended_download(csv_file,
                                                                 config_file_path,
-                                                                ["FF"],
+                                                                ["MMM"],
                                                                 format='csv')
 
 

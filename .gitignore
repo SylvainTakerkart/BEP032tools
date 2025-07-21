@@ -58,4 +58,4 @@ Thumbs.db
 # Fichiers temporaires à ignorer
 BIDSTools/dev_tests/fff.json
 BIDSTools/dev_tests/ffffff.json
-BIDSTools/dev_tests/fff.CSV
+bep032tools/fff.CSV

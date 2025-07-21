@@ -43,6 +43,10 @@ class ProjectConfig:
 
         return self.config.get('datafilepaths_list', {}).get('raw_data_path_pattern', '{chunk_key}_datafile_path')
 
+    def get_segement_value(self):
+        return self.global_config.get('segment')
+
+
 
     def get_data_type(self):
         data_types = self.global_config.get('data_types', [])

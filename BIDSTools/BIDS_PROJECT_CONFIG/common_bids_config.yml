@@ -1,0 +1,50 @@
+PROJECT_NAME: generic_bids_project
+modality: generic_modality   # e.g., eyetracking, microscopy, etc.
+data_types: generic_type     # e.g., beh, micr, etc.
+segment : segment   # e.g., run , chunk
+segment_id : "{segment}_id"  # e.g., run_id
+fields:
+  datafilepaths_list:
+    description: List of fields containing paths to raw data files (e.g., .edf, .asc, .tif)
+    required: true
+    raw_data_path_pattern: "{segment_key}_datafile_path"
+    example:
+      - segment01_datafile_path
+      - segment02_datafile_path
+
+  segment_list:
+    description: List of segments (runs/chunks) to process
+    required: true
+    value:
+      - segment01
+      - segment02
+
+
+  custom_pattern:
+    description: Pattern to dynamically generate segment-specific field names
+    pattern: "{segment_key}_{field}"
+    required: false
+
+  output_filename_format: # format of the main output file eg sub-01_ses-01_task-01_run-01_eyetracking.edf or "sub-_sample-{sample_id}_chunk-{chunk_id}_{microscope_type}_ome.tif"
+    description: Format of the main output file name
+    type: string
+    default: "sub-{participant_id}_ses-{session_id}_task-{task}_segment-{segment_id}_{modality}.ext"
+    example:
+       - "sub-01_ses-01_task-01_run-01_eyetracking.edf"        # for eyetracking
+       - "sub-01_ses-01_task-01_chunk-01_CONF.ome.tif"         # for confocal microscopy
+
+  output_json_format:
+    description: Format of the associated JSON file name
+    type: string
+    default: "sub-{participant_id}_ses-{session_id}_task-{task}_segment-{segment_id}_{modality}.json"
+
+  session_id:
+    description: Session identifier (e.g., ses-01)
+    type: string
+    required: true
+
+required:
+  - participant_id
+  - session_id
+  - task
+  - segment_id

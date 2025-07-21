@@ -1,5 +1,5 @@
 """
-confocal_microscopy_customs.py
+BidsDatasetBuilder.py
 
 This module provides tools for processing, organizing, and converting neuroimaging datasets into the BIDS (Brain Imaging Data Structure) format.
 It supports directory creation, file conversion, metadata handling, and integration with elab sources and the BIDSTools ecosystem.
@@ -35,6 +35,7 @@ from elab_bridge import server_interface
 from BIDSTools.convertfileformat import ConvertedfSData
 from BIDSTools.BIDS_PROJECT_CONFIG.MicroscopyConfocalCustom import MicroscopyConfocalCustom
 from BIDSTools.BIDS_PROJECT_CONFIG.Eyetracking import EyetrackingCustom
+from BIDSTools.BIDS_PROJECT_CONFIG.BIDS_modality_custom import ModalityCustomBuilder
 
 def generate_top_level_file(outpout_dir):
     """
@@ -331,18 +332,8 @@ def construct_bids_folders(output_dir, experiment, project_config):
 
 
     # creat a custom part
-    if project_config.get_project_name()=='microscopy_confocal':
-        custom_part= MicroscopyConfocalCustom(project_config, experiment, current_dir)
-        custom_part.write_chunk_info()
-
-    elif project_config.get_project_name()=='eyetracking':
-
-        custom_part= EyetrackingCustom(project_config, experiment, current_dir)
-        custom_part.write_run_info()
-
-    else:
-        raise ValueError("Unknown project name , perhaps this project is not supported yet : " + project_config.get_project_name())
-
+    custom_builder  = ModalityCustomBuilder(project_config, experiment, current_dir)
+    custom_builder.build_customizations()
 
     # Append the processed experiment to the list
     list_experiments_already_processed.append(experiment)

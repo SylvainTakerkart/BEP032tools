@@ -79,6 +79,7 @@ class EyetrackingCustom:
             with open(os.path.join(self.current_dir, chunk_info['final_path']), 'w') as f:
                 f.write('')
             # copy raw data
+            print(chunk_info)
             shutil.copyfile(chunk_info['raw_data_path'], os.path.join(self.current_dir, os.path.basename(chunk_info['raw_data_path'])))
 
 
