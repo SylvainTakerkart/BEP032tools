@@ -595,52 +595,11 @@ def fill_static_files(output_dir):
             write_static_files(template_path, file_path)
 
 
-def read_edf(edf_path):
-    f = pyedflib.EdfReader(edf_path)
-    n = f.signals_in_file
-    signal_labels = f.getSignalLabels()
-    sigbufs = []
-    for i in range(n):
-        sigbufs.append(f.readSignal(i))
-    f._close()
-    del f
-    return signal_labels, sigbufs
-
-
-# Écrire les données dans un fichier .msg
-def write_msg(msg_path, signal_labels, sigbufs):
-    with open(msg_path, 'w') as msg_file:
-        for label, signal in zip(signal_labels, sigbufs):
-            msg_file.write(f"Label: {label}\n")
-            msg_file.write("Signal:\n")
-            msg_file.write(", ".join(map(str, signal)))
-            msg_file.write("\n\n")
-
 
 def simple_copy(source_path, destination_path):
     shutil.copytree(source_path, destination_path)
 
 
-def convert_row_to_yml(row, temp_file_name):
-    mydict = dict(row)
-    with open(temp_file_name, 'w') as ymlfile:
-        yaml.dump(mydict, ymlfile, default_flow_style=False, sort_keys=False)
-
-
-import tempfile
-
-
-def edf_converter(row, raw_data, output_dir):
-    yml_file = tempfile.NamedTemporaryFile(suffix='.yml', delete=False)
-    yml_file_name = yml_file.name
-    convert_row_to_yml(row, yml_file_name)
-
-    edf_converter = ConvertedfSData(raw_data, yml_file_name, output_dir)
-    edf_converter.convert_bids_data()
-    yml_file.close()
-    os.remove(yml_file_name)
-def confacal_microscopy_data_processing(project_config, current_dir="sub-1/ses-1/micr/"):
-    data_file_format =project_config.get_data_file_format()
 
 
 

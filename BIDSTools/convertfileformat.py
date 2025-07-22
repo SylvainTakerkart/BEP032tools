@@ -22,11 +22,12 @@ import shutil
 from abc import ABC, abstractmethod
 from eye2bids.edf2bids import edf2bids
 import tempfile
-
+import yaml
 
 class ConvertBIDSData(ABC):
-    def __init__(self, raw_data):
-        self.raw_data = raw_data
+    def __init__(self, raw_data_path = None):
+        self.raw_data_path = raw_data_path
+
 
     @abstractmethod
     def convert_bids_data(self):
@@ -35,32 +36,43 @@ class ConvertBIDSData(ABC):
 
 
 class ConvertedfSData(ConvertBIDSData):
-    def __init__(self, raw_data, metadata, path_to_store_convertfile):
+    def __init__(self, raw_data, metadata_yml_file=None,
+                 path_to_store_convertfile=None, experiment=None):
         super().__init__(raw_data)
-
-        # Validate the raw data file extension
-        basename, extension = os.path.splitext(raw_data)
-        if extension.lower() != '.edf':
-            raise ValueError("Check the raw data file extension; it must be '.edf'")
-
         self.raw_data = raw_data
-
-        # Validate the metadata file extension
-        basename, extension = os.path.splitext(metadata)
-        if extension.lower() != '.yml':
-            raise ValueError("Check the metadata file extension; it must be '.yml'")
-
-        self.metadata = metadata
         self.path_to_store_convertfile = path_to_store_convertfile
+        self._temp_yml_file = None  # For cleanup
+
+        if experiment is not None:
+            # Convert experiment to dict and write to temp YAML
+            with tempfile.NamedTemporaryFile(suffix='.yml', delete=False,
+                                             mode="w") as yml_file:
+                yml_file_name = yml_file.name
+                yaml.dump(experiment.to_dict(), yml_file,
+                          default_flow_style=False, sort_keys=False)
+            self.metadata_yml_file = yml_file_name
+            self._temp_yml_file = yml_file_name
+        elif metadata_yml_file is not None:
+            # Validate the metadata file extension
+            basename, extension = os.path.splitext(metadata_yml_file)
+            if extension.lower() != '.yml':
+                raise ValueError(
+                    "Check the metadata file extension; it must be '.yml'")
+            self.metadata_yml_file = metadata_yml_file
+        else:
+            raise ValueError(
+                "You must provide either an experiment or a metadata_yml_file.")
 
     def convert_bids_data(self):
         # Call the conversion function
         # add a tmp dir to store the converted file
         with tempfile.TemporaryDirectory() as tmpdirname:
-            edf2bids(self.raw_data, self.metadata, tmpdirname)
+            edf2bids(self.raw_data, self.metadata_yml_file, tmpdirname)
             for file in os.listdir(tmpdirname):
                 shutil.move(os.path.join(tmpdirname, file),
                             os.path.join(self.path_to_store_convertfile, file))
+        if self._temp_yml_file:
+            os.remove(self._temp_yml_file)
 
 
 if __name__ == "__main__":

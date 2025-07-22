@@ -8,9 +8,10 @@ from BIDSTools.ProjectConfig import ProjectConfig
 from BIDSTools.Experiment import Experiment
 import os
 import shutil
-
+from BIDSTools.convertfileformat import ConvertedfSData
+from BIDSTools.log import  log
 class BIDSCommonModality:
-    def __init__(self, project_config, experiment, current_dir):
+    def __init__(self, project_config, experiment, current_dir,converter = None):
         self.project_config = project_config
         self.experiment = experiment
         self.current_dir = current_dir
@@ -20,6 +21,8 @@ class BIDSCommonModality:
         self.segment_list = self.project_config.get_segments_list()
         self.data_file_format = self.project_config.get_data_file_format()
         self.custom_pattern = self.project_config.get_custom_config()
+        self.segment_dict = {}
+        self.converter = converter
 
     def get_segment_details(self):
         segment_dict = {}
@@ -47,7 +50,7 @@ class BIDSCommonModality:
             segment_data[self.segment_type] = segment_key
 
             raw_data_path_pattern = self.project_config.get_raw_data_path()
-            print("")
+
             print("format dict:", {f"{self.segment_type}_key": segment_key,
                                    "segment_key": segment_key})
             segment_data['raw_data_path'] = getattr(
@@ -66,7 +69,7 @@ class BIDSCommonModality:
 
 
             segment_dict[segment_key] = segment_data
-
+            self.segment_dict = segment_dict
         return segment_dict
 
     def get_segment_data_path(self, segment):
@@ -75,7 +78,9 @@ class BIDSCommonModality:
         segment_info.update(segment)
 
         segment_info['modality'] = self.project_config.global_config.get('modality', 'unknown')
+
         segment['final_path'] = self.data_file_format.format(**segment_info)
+
         return segment
 
     def write_segment_info(self):
@@ -84,15 +89,60 @@ class BIDSCommonModality:
             segment_info = self.get_segment_data_path(segment_info)
             # create empty file with final path
             os.makedirs(self.current_dir, exist_ok=True)
-            with open(os.path.join(self.current_dir, segment_info['final_path']), 'w') as f:
-                f.write('')
-            # copy raw data if available
+           # with open(os.path.join(self.current_dir, segment_info['final_path']), 'w') as f:
+            #    f.write('')
+            # copy raw data if available to  destination path with the correct name
+
             if segment_info.get('raw_data_path'):
+                # this will copy the raw data to the current directory
                 shutil.copyfile(
                     segment_info['raw_data_path'],
-                    os.path.join(self.current_dir, os.path.basename(segment_info['raw_data_path']))
+                    os.path.join(self.current_dir, os.path.basename(segment_info['final_path'])),
                 )
-            print(segment_info)
+                final_raw_data_path = os.path.join(self.current_dir, os.path.basename(segment_info['final_path']))
+                segment_info['final_raw_data_path'] = final_raw_data_path
+                # creat the specific converter with segment info
+                self.create_converter(segment_info)
+                if self.converter is None:
+
+                    log.info(f"Modality {self.project_config.global_config.get('modality')} has no converter")
+
+
+                else:
+
+
+
+                    # make the conversion if the converter is  available
+
+                    self.converter.convert_bids_data()
+
+
+
+
+
+
+    def create_converter(self, segment_info):
+        raw_data_path = segment_info['raw_data_path']
+        all_info = self.experiment.to_dict()
+        all_info.update(segment_info)
+        temps_exp=Experiment(**all_info)
+        ext = os.path.splitext(raw_data_path)[1]
+        final_raw_data_path = segment_info['final_raw_data_path']
+
+
+
+
+
+        if ext=='.edf':
+           self.converter = ConvertedfSData(final_raw_data_path, None, self.current_dir, temps_exp)
+
+
+        else:
+            log.info(f"Unknown file format: {ext}")
+
+
+
+
 
 
 
@@ -110,6 +160,9 @@ class EyetrackingCustom(BIDSCommonModality):
     def __init__(self, project_config, experiment, current_dir):
         super().__init__(project_config, experiment, current_dir)
 
+
+
+
 class ModalityCustomBuilder:
     def __init__(self, project_config, experiment, current_dir):
         if project_config.get_project_name() == 'microscopy_confocal':
@@ -122,6 +175,8 @@ class ModalityCustomBuilder:
     def build_customizations(self):
         self.custom.write_segment_info()
         return self.custom
+
+
 
 if __name__ == "__main__":
     from BIDSTools.ProjectConfig import ProjectConfig
