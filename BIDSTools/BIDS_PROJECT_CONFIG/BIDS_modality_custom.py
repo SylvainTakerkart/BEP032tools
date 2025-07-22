@@ -1,8 +1,19 @@
 """
-bids_common_modality.py
+bids_modality_custom.py
+this file contain contain the common modlity custom part of bids project
+and the customieation  part of each modlity
+it is a factory for  creating custom modality classes which will process the data , with the good  format and
+the good path ( here is the place for the conversion part)
+the current directory is the directory where the BIDS output will be written
+example:
 
-A generic handler for BIDS modalities (eyetracking, microscopy, etc.) using the segment abstraction.
-Compatible with unified YAML configs using the 'segment' and 'segment_id' fields.
+  /sub-1/session-1/beh/  #  as current directory
+        sub_1_session_1_beh_task-1-events.tsv   # as data file  writin in the current directory
+        sub_1_session_1_beh_task-1-eyetracking.tsv # as data file  writin in the current directory
+
+
+
+
 """
 from BIDSTools.ProjectConfig import ProjectConfig
 from BIDSTools.Experiment import Experiment
@@ -12,6 +23,39 @@ from BIDSTools.convertfileformat import ConvertedfSData
 from BIDSTools.log import  log
 class BIDSCommonModality:
     def __init__(self, project_config, experiment, current_dir,converter = None):
+        """
+        Initialize the BIDSCommonModality class with project configuration, experiment details, and directory path.
+
+        Parameters
+        ----------
+        project_config : ProjectConfig
+            An instance of the ProjectConfig class containing project-specific configurations.
+        experiment : Experiment
+            An instance of the Experiment class containing details of the current experiment.
+        current_dir : str
+            Path to the current working directory where files will be processed and stored.
+        converter : optional
+            An optional converter object for handling data format conversions.
+
+        Attributes
+        ----------
+        segment_type : str
+            The type of segment (e.g., 'run', 'chunk') as defined in the project configuration.
+        segment_id_attr : str
+            The attribute name for segment IDs, formatted based on segment type.
+        data_type : str
+            The data type as specified in the project configuration.
+        segment_list : list
+            A list of segments obtained from the project configuration.
+        data_file_format : str
+            The file format pattern for data files as defined in the project configuration.
+        custom_pattern : str
+            The custom configuration pattern for segments.
+        segment_dict : dict
+            A dictionary to store segment details.
+        converter : optional
+            An optional converter object for handling data format conversions.
+        """
         self.project_config = project_config
         self.experiment = experiment
         self.current_dir = current_dir
@@ -74,6 +118,22 @@ class BIDSCommonModality:
 
     def get_segment_data_path(self, segment):
         # Add any extra info from experiment or segment
+
+
+        """
+        Formats the data path for a given segment based on the BIDS configuration.
+
+        Parameters
+        ----------
+        segment : dict
+            A dictionary containing information about the segment.
+
+        Returns
+        -------
+        segment : dict
+            The input dictionary with an additional 'final_path' key containing the formatted data path.
+        """
+
         segment_info = self.experiment.to_dict()
         segment_info.update(segment)
 
@@ -84,6 +144,12 @@ class BIDSCommonModality:
         return segment
 
     def write_segment_info(self):
+        """
+        Write BIDS segment information files for the experiment.
+
+        Copies raw data for each segment to the correct location if available.
+        Creates a converter for each segment if available and calls its convert_bids_data method.
+        """
         details = self.get_segment_details()
         for segment_key, segment_info in details.items():
             segment_info = self.get_segment_data_path(segment_info)
@@ -122,6 +188,19 @@ class BIDSCommonModality:
 
 
     def create_converter(self, segment_info):
+        """
+        Creates a converter for the given segment_info.
+
+        Parameters
+        ----------
+        segment_info : dict
+            A dictionary containing information about the segment.
+
+        Notes
+        -----
+        The converter is determined by the file extension of the raw data path in the segment info.
+        Currently, only .edf files are supported and use the `ConvertedfSData` converter.
+        """
         raw_data_path = segment_info['raw_data_path']
         all_info = self.experiment.to_dict()
         all_info.update(segment_info)
@@ -151,6 +230,23 @@ class BIDSCommonModality:
 
 class MicroscopyCustom(BIDSCommonModality):
     def __init__(self, project_config, experiment, current_dir):
+        """
+        Initialize the MicroscopyCustom class.
+
+        Parameters
+        ----------
+        project_config : ProjectConfig
+            The project configuration object.
+        experiment : Experiment
+            The experiment object.
+        current_dir : str
+            The directory where the BIDS output will be written.
+
+        Notes
+        -----
+        This class is a customization of the BIDSCommonModality class for Microscopy projects.
+        It sets the microscope_type attribute of the experiment to the value in the project config.
+        """
         super().__init__(project_config, experiment, current_dir)
         self.microscopy_type =self.project_config.global_config.get('microscope_type', 'CONF')
         experiment.microscope_type = self.microscopy_type
@@ -158,6 +254,23 @@ class MicroscopyCustom(BIDSCommonModality):
 
 class EyetrackingCustom(BIDSCommonModality):
     def __init__(self, project_config, experiment, current_dir):
+        """
+        Initialize the EyetrackingCustom class.
+
+        Parameters
+        ----------
+        project_config : ProjectConfig
+            The project configuration object.
+        experiment : Experiment
+            The experiment object.
+        current_dir : str
+            The directory where the BIDS output will be written.
+
+        Notes
+        -----
+        This class is a customization of the BIDSCommonModality class for Eyetracking projects.
+        """
+        super().__init__(project_config, experiment, current_dir)
         super().__init__(project_config, experiment, current_dir)
 
 
@@ -165,6 +278,23 @@ class EyetrackingCustom(BIDSCommonModality):
 
 class ModalityCustomBuilder:
     def __init__(self, project_config, experiment, current_dir):
+        """
+        Initialize the ModalityCustomBuilder class.
+
+        Parameters
+        ----------
+        project_config : ProjectConfig
+            The project configuration object.
+        experiment : Experiment
+            The experiment object.
+        current_dir : str
+            The directory where the BIDS output will be written.
+
+        Notes
+        -----
+        This class is a factory for creating custom modality classes based on the project configuration.
+        It creates an instance of either the MicroscopyCustom or EyetrackingCustom class depending on the project name.
+        """
         if project_config.get_project_name() == 'microscopy_confocal':
             self.custom = MicroscopyCustom(project_config, experiment, current_dir)
         elif project_config.get_project_name() == 'eyetracking':
