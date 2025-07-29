@@ -2,7 +2,8 @@
 PROJECT_NAME: eyetracking
 modality: 'BEHAVIORAL EXPERIMENTS' # e.g., eyetracking
 data_types: beh
-segment : run
+#segment : run
+run: run
 segment_id : run_id
 fields:
   datafilepaths_list:
@@ -14,7 +15,7 @@ fields:
       - run02_datafile_path
       - run03_datafile_path
 
-  segment_list: # a segment is a run for eye-tracking
+  run_list: # a segment is a run for eye-tracking
     description: List of eye-tracking runs or sessions to process
     required: true
     value:

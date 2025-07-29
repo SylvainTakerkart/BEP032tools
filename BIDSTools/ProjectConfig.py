@@ -25,6 +25,11 @@ class ProjectConfig:
         return modalities
 
     def get_segments_list(self):
+        if 'chunk_list' in self.config:
+            return self.config.get('chunk_list', {}).get('value', [])
+        elif 'run_list' in self.config:
+            return self.config.get('run_list', {}).get('value', [])
+
         return self.config.get('segment_list', {}).get('value', [])
 
     def get_datafile_fields(self):
@@ -44,6 +49,10 @@ class ProjectConfig:
         return self.config.get('datafilepaths_list', {}).get('raw_data_path_pattern', '{chunk_key}_datafile_path')
 
     def get_segement_value(self):
+        if 'chunk' in self.global_config:
+            return self.global_config.get('chunk')
+        elif 'run' in self.global_config:
+            return self.global_config.get('run')
         return self.global_config.get('segment')
 
 
@@ -62,9 +71,9 @@ if __name__ == "__main__":
 
     print("Nom du projet :", pc.get_project_name())
     print("Modalities :", pc.get_project_modalities())
-    print("Chunks :", pc.get_chunks_list())
+    print("Chunks :", pc.get_segments_list())
     print("Champs de fichiers de données :", pc.get_datafile_fields())
     print("Session requise :", pc.is_session_required())
     print("\n--- Infos par chunk ---")
-    for chunk, path_field in zip(pc.get_chunks_list(), pc.get_datafile_fields()):
+    for chunk, path_field in zip(pc.get_segments_list(), pc.get_datafile_fields()):
         print(f"Chunk: {chunk} -> Champ: {path_field}")

@@ -100,7 +100,7 @@ def main() -> None:
         config_file = "/home/INT/idrissou.f/Bureau/diglab/elabConf.json"  # Path to your configuration file
         metadata_file = "metadata.csv" # Path where to save the downloaded metadata
         tag = "FF"
-        tag = "testt"  # Tag to filter experiments
+        #tag = "testt"  # Tag to filter experiments
         output_file = "output.csv"  # Output CSV file
 
         print(f"Downloading experiment data with tag: {tag}")

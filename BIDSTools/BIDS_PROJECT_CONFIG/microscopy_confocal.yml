@@ -2,8 +2,8 @@ PROJECT_NAME: microscopy_confocal
 
 modality: microscopy
 data_types: micr
-segment: chunk
-
+#segment: chunk
+chunk: chunk
 segment_id: chunk_id
 fields:
   datafilepaths_list:
@@ -15,7 +15,7 @@ fields:
       - image02_datafile_path
       - image03_datafile_path
 
-  segment_list:  # a segment is a chunk (therefore a segment_list is a list of chunks)
+  chunk_list:  # a segment is a chunk (therefore a segment_list is a list of chunks)
     description: List of chunk prefixes to process
     value:
       - image01
