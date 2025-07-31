@@ -3,14 +3,13 @@ import sys
 import tempfile
 import unittest
 import shutil
-import json
 
 # Ajouter le chemin du dossier parent pour trouver le package BIDSTools
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from BIDSTools.GenerateFullBIDSDataset import check_subdir, generate_subdir, generate_datatype_dir, \
-    generate_datatype_dir, generate_datatype_dir, generate_session_dir, writeheader, \
-    writeheader_tsv_json_files, add_new_experiment_to_tsv
+from BIDSTools.dev_tests.GenerateFullBIDSDataset import check_subdir, generate_subdir, \
+    generate_datatype_dir, generate_session_dir, writeheader, \
+    writeheader_tsv_json_files
 
 
 class TestProcessBIDSData(unittest.TestCase):

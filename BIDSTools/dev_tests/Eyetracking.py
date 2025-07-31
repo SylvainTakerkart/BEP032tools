@@ -85,7 +85,7 @@ class EyetrackingCustom:
 
 # Example usage
 if __name__ == "__main__":
-    config_file = "eyetracking.yml"
+    config_file = "../BIDS_PROJECT_CONFIG/eyetracking.yml"
     experiment = Experiment()
     experiment.participant_id = "001"  # Replace with ax
     experiment.session_id = "01"
@@ -95,7 +95,8 @@ if __name__ == "__main__":
     experiment.run01_datafile_path = "run01_datafile_path"
     experiment.run01_task = "eyetracking"
     project_config = ProjectConfig(config_file)
-    custom_handler = EyetrackingCustom(project_config, experiment, "./output")
+    custom_handler = EyetrackingCustom(project_config, experiment,
+                                       "../BIDS_PROJECT_CONFIG/output")
     print(custom_handler.eyetracking_type)
     segment_details = custom_handler.get_segment_details()
     print(segment_details)

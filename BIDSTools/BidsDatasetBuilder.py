@@ -19,22 +19,13 @@ import os
 import shutil
 from BIDSTools.get_experiement_details import get_experiement_details
 from BIDSTools.BidsModality import Modality
-import numpy as np
-import yaml
-import ast
 from BIDSTools.Createfile import CreatFile
 from BIDSTools.ProjectConfig import ProjectConfig
 
 from BIDSTools.constants_fields import *  # Import des constantes de mapping de champs
 
 from BIDSTools.Experiment import Experiment
-import elab_bridge
 
-from elab_bridge import server_interface
-
-from BIDSTools.convertfileformat import ConvertedfSData
-from BIDSTools.BIDS_PROJECT_CONFIG.MicroscopyConfocalCustom import MicroscopyConfocalCustom
-from BIDSTools.BIDS_PROJECT_CONFIG.Eyetracking import EyetrackingCustom
 from BIDSTools.BIDS_PROJECT_CONFIG.BIDS_modality_custom import ModalityCustomBuilder
 
 def generate_top_level_file(outpout_dir):

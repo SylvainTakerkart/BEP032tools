@@ -119,11 +119,12 @@ def main():
     experiment.image03_datafile_path = "image03_datafile_path"
 
     # Load project configuration
-    config_file = "microscopy_confocal.yml"  # Make sure this file exists in PROJECT_CONFIG_DIR
+    config_file = "../BIDS_PROJECT_CONFIG/microscopy_confocal.yml"  # Make sure this file exists in PROJECT_CONFIG_DIR
     project_config = ProjectConfig(config_file)
 
     # Create an instance of the custom handler
-    custom_handler = MicroscopyConfocalCustom(project_config, experiment, "./output")
+    custom_handler = MicroscopyConfocalCustom(project_config, experiment,
+                                              "../BIDS_PROJECT_CONFIG/output")
 
     # Get chunk details
     chunk_details = custom_handler.get_chunk_details()
@@ -133,7 +134,7 @@ def main():
     from pprint import pprint
     pprint(chunk_details)
 
-    current_dir = "./output/sub-01/ses-01/micr/"
+    current_dir = "../BIDS_PROJECT_CONFIG/output/sub-01/ses-01/micr/"
     os.makedirs(current_dir, exist_ok=True)
     custom_handler.write_chunk_info()
 

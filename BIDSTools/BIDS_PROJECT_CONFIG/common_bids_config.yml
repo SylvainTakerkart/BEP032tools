@@ -1,3 +1,5 @@
+# This is a configuration file for a generic BIDS project. It is a general template for YAML configuration files and will be used as a base for project configuration files, for example, eyetracking.yml and microscopy_confocal.yml.
+
 PROJECT_NAME: generic_bids_project
 modality: generic_modality   # e.g., eyetracking, microscopy, etc.
 data_types: generic_type     # e.g., beh, micr, etc.

@@ -208,7 +208,8 @@ def writeheader_tsv_json_files(output_dir):
                            os.path.isfile(os.path.join(output_dir, f))]
 
     script_dir = os.path.dirname(__file__)
-    agnostic_template_dir = os.path.join(script_dir, 'template_agnotic_file')
+    agnostic_template_dir = os.path.join(script_dir,
+                                         '../template_agnotic_file')
 
     list_template_files = os.listdir(agnostic_template_dir)
     list_template_files = [f for f in list_template_files if
@@ -585,7 +586,8 @@ def fill_static_files(output_dir):
     """
     script_dir = os.path.dirname(__file__)
 
-    agnostic_template_dir = os.path.join(script_dir, "template_agnotic_file")
+    agnostic_template_dir = os.path.join(script_dir,
+                                         "../template_agnotic_file")
 
     list_template_files = os.listdir(agnostic_template_dir)
 
