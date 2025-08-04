@@ -20,6 +20,19 @@ setup(
     packages=find_packages(),
     data_files=[('.', ['VERSION', 'README.md', 'requirements.txt'])],
     include_package_data=True,
+    install_requires=[
+        "pip~=23.2.1",
+        "wheel~=0.41.2",
+        "pytz~=2024.1",
+        "PyYAML~=6.0.1",
+        "numpy~=1.26.4",
+        "setuptools~=68.2.0",
+        "pandas~=2.2.2",
+        "python-dateutil~=2.9.0.post0",
+        "six~=1.16.0",
+        "DigLabTools~=0.0.7",
+        "eye2bids @ git+https://github.com/bids-standard/eye2bids.git#egg=eye2bids"
+    ],
     package_data={
             # If any package contains *.json or *.csv files, include them:
             "": ["*.json", '*.csv', '*.tsv', 'yml'],
@@ -31,7 +44,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     license='MIT',
-    install_requires=requires,
+
     entry_points={
         'console_scripts': ['BEP032Validator=bep032tools.validator.BEP032Validator:main',
                             'BEP032Generator=bep032tools.generator.BEP032Generator:main',
@@ -45,3 +58,4 @@ setup(
         'test': ['pytest', 'datalad', 'parameterized']
     }
 )
+
