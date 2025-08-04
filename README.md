@@ -1,3 +1,39 @@
+# BIDS TOOLS DOCUMENTATION
+
+## Installation
+
+Clone the repository and run the following commands:
+
+```bash
+cd BEP032tools
+
+# Download the latest PR (if not yet merged)
+git fetch origin pull/163/head:pr-163
+git checkout pr-163
+
+# Install the project in development mode
+pip install -e .
+```
+
+## Usage
+
+To display the help message:
+
+```bash
+build-bids -h
+```
+
+## Example Command
+
+```bash
+build-bids \
+  -f "/home/INT/idrissou.f/Bureau/elabConf.json" \
+  -m "micrs.csv" \
+  -o ./output/ \
+  -t dev_rhythmoglia1 \
+  -p "/home/INT/idrissou.f/PycharmProjects/BEP032tools/BIDSTools/BIDS_PROJECT_CONFIG/microscopy_confocal.yml"
+```
+
 # BEP032 tools
 
 This repository collects tools supporting the [BEP032 proposal](https://bids.neuroimaging.io/bep032). It originally emerged under the name `AnDO` (Animal Data Organization) and gathers a set of tools facilitating the usage of the proposed structure. For the documentation of BIDS itself, see https://bids-specification.readthedocs.io. The proposal is open to any type of feedback from the community and we are welcoming all types of constructive comments.
