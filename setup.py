@@ -22,7 +22,9 @@ setup(
     include_package_data=True,
     package_data={
             # If any package contains *.json or *.csv files, include them:
-            "": ["*.json", '*.csv', '*.tsv'],
+            "": ["*.json", '*.csv', '*.tsv', 'yml'],
+'BIDSTools': [
+            'ressources/schema/objects/*.yaml']
     },
     author="Jeremy Garcia, Sylvain Takerkart , Julia Sprenger",
     description="Checks the validity of a directory with respect to the BEP032 specifications ",
@@ -34,9 +36,10 @@ setup(
         'console_scripts': ['BEP032Validator=bep032tools.validator.BEP032Validator:main',
                             'BEP032Generator=bep032tools.generator.BEP032Generator:main',
                             'BEP032Templater=bep032tools.generator.BEP032Templater:main',
-                            'BEP032Viewer=bep032tools.viewer.BEP032Viewer:main'],
+                            'BEP032Viewer=bep032tools.viewer.BEP032Viewer:main',
+                            'build-bids=BIDSTools.cli:cli'],
     },
-    python_requires='>=3.7',
+    python_requires='==3.10.12',
     extras_require={
         'tools': ['pandas', 'pynwb', 'neo', 'nixio'],
         'test': ['pytest', 'datalad', 'parameterized']
