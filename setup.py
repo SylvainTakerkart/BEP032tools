@@ -31,6 +31,7 @@ setup(
         "python-dateutil~=2.9.0.post0",
         "six~=1.16.0",
         "DigLabTools~=0.0.7",
+	"elabapi_python~=5.0.2",
         "eye2bids @ git+https://github.com/bids-standard/eye2bids.git#egg=eye2bids"
     ],
     package_data={
@@ -58,4 +59,3 @@ setup(
         'test': ['pytest', 'datalad', 'parameterized']
     }
 )
-
