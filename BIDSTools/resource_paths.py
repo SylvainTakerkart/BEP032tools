@@ -8,6 +8,7 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESSOURCES_DIR = os.path.join(BASE_DIR, 'ressources')
+PROJECT_CONFIG_DIR = os.path.join(BASE_DIR, 'BIDS_PROJECT_CONFIG')
 
 # YAML schemas
 MODALITIES_YAML= os.path.join(RESSOURCES_DIR, 'schema', 'objects', 'modalities.yaml')

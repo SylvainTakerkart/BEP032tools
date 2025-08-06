@@ -63,10 +63,15 @@ def get_experiement_details(config_file_path: str, metada_file_path: str, tag: s
 
             # Extract field values
             for k, v in data['extra_fields'].items():
-                print(f"Processing field: {k} = {v['value']}")
-                fields_details[k] = v['value']
+              try:
+                  print(f"Processing field: {k} = {v['value']}")
+                  fields_details[k] = v['value']
+              except KeyError:
+                  print(f"field  missing 'value' for the key: {k}")
+                  fields_details[k] = ""
 
-            # Extract modality information from group names
+            # Extract modalit
+              # y information from group names
             modaity_list = []
             for group_name in group_fields:
                 if group_name.startswith('MODALITY'):
@@ -99,7 +104,8 @@ def main() -> None:
         # Configuration parameters
         config_file = "/home/INT/idrissou.f/Bureau/diglab/elabConf.json"  # Path to your configuration file
         metadata_file = "metadata.csv" # Path where to save the downloaded metadata
-        tag = "FF"  # Tag to filter experiments
+        tag = "FF"
+        #tag = "testt"  # Tag to filter experiments
         output_file = "output.csv"  # Output CSV file
 
         print(f"Downloading experiment data with tag: {tag}")

@@ -42,6 +42,8 @@ class CreatFile:
             filename (str): The name of the file to create.
         """
         file_path = os.path.join(self.output_path, filename)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
         if not os.path.exists(file_path):
             with open(file_path, 'w'):
                 pass
